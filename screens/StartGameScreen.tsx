@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
+  Dimensions,
+  ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import Card from '../components/Card';
 import colors from '../constants/colors';
@@ -26,8 +29,9 @@ const styles = StyleSheet.create({
     fontFamily: 'open-sans-bold',
   },
   inputContainer: {
-    width: 300,
-    maxWidth: '80%',
+    width: '80%',
+    minWidth: 300,
+    maxWidth: '95%',
     alignItems: 'center',
   },
   buttonContainer: {
@@ -37,7 +41,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   button: {
-    width: 100,
+    // width: Dimensions.get('window').width / 4,
     borderColor: 'black',
     borderWidth: 1,
     justifyContent: 'center',
@@ -74,6 +78,13 @@ const StartGameScreen: FC<Props> = ({ onStartGame }) => {
   const [enteredValue, setEnteredValue] = useState<string>('');
   const [confirmed, setConfirmed] = useState<boolean>(false);
   const [selectedNumber, setSelectedNumber] = useState<number>();
+  const [buttonWidth, setButtonWidth] = useState<number>(
+    Dimensions.get('window').width / 4
+  );
+
+  Dimensions.addEventListener('change', () => {
+    setButtonWidth(Dimensions.get('window').width / 4);
+  });
 
   const dismissKeyboard = () => Keyboard.dismiss();
 
@@ -115,6 +126,17 @@ const StartGameScreen: FC<Props> = ({ onStartGame }) => {
     dismissKeyboard();
   };
 
+  useEffect(() => {
+    const updateLayout = () => {
+      setButtonWidth(Dimensions.get('window').width / 4);
+    };
+    Dimensions.addEventListener('change', updateLayout);
+
+    return () => {
+      Dimensions.removeEventListener('change', updateLayout);
+    };
+  }, []);
+
   let confirmedOutput;
 
   if (confirmed) {
@@ -133,38 +155,50 @@ const StartGameScreen: FC<Props> = ({ onStartGame }) => {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.screen}>
-        <TextWithFamily fontFamily="open-sans-bold" style={styles.title}>
-          Start a New Game!
-        </TextWithFamily>
-        <Card style={styles.inputContainer}>
-          <TextWithFamily>Select a Number</TextWithFamily>
-          <Input
-            style={styles.input}
-            maxLength={2}
-            keyboardType="number-pad"
-            changeValue={numberInputHandler}
-            value={enteredValue}
-          />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={{ ...styles.button, ...styles.failButton }}
-              onPress={resetInputHandler}
-            >
-              <Text style={styles.failButton}>Reset</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{ ...styles.button, ...styles.successButton }}
-              onPress={confirmInputHandler}
-            >
-              <Text style={styles.successButton}>Confirm</Text>
-            </TouchableOpacity>
+    <ScrollView>
+      <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={30}>
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <View style={styles.screen}>
+            <TextWithFamily fontFamily="open-sans-bold" style={styles.title}>
+              Start a New Game!
+            </TextWithFamily>
+            <Card style={styles.inputContainer}>
+              <TextWithFamily>Select a Number</TextWithFamily>
+              <Input
+                style={styles.input}
+                maxLength={2}
+                keyboardType="number-pad"
+                changeValue={numberInputHandler}
+                value={enteredValue}
+              />
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={{
+                    ...styles.button,
+                    ...styles.failButton,
+                    width: buttonWidth,
+                  }}
+                  onPress={resetInputHandler}
+                >
+                  <Text style={styles.failButton}>Reset</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    ...styles.button,
+                    ...styles.successButton,
+                    width: buttonWidth,
+                  }}
+                  onPress={confirmInputHandler}
+                >
+                  <Text style={styles.successButton}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </Card>
+            {confirmedOutput}
           </View>
-        </Card>
-        {confirmedOutput}
-      </View>
-    </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import colors from '../constants/colors';
 import TextWithFamily from './TextWithFamily';
 
@@ -8,12 +8,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 90,
     paddingTop: 36,
-    backgroundColor: colors.primary,
+    backgroundColor: Platform.OS === 'android' ? colors.primary : 'white',
     alignItems: 'center',
     justifyContent: 'center',
+    borderBottomColor: Platform.OS === 'ios' ? '#ccc' : 'transparent',
+    borderBottomWidth: Platform.OS === 'ios' ? 1 : 0,
   },
   title: {
-    color: 'black',
+    color: Platform.OS === 'ios' ? colors.primary : 'white',
     fontSize: 18,
   },
 });

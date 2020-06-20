@@ -5,8 +5,10 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+// import { ScreenOrientation } from 'expo';
 
 import Card from '../components/Card';
 import NumberContainer from '../components/NumberContainer';
@@ -22,7 +24,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 20,
+    marginTop: Dimensions.get('window').height > 600 ? 20 : 10,
     width: 300,
     maxWidth: '80%',
   },
@@ -42,7 +44,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    width: '80%',
+    width: Dimensions.get('window').width > 350 ? '60%' : '80%',
   },
   list: {
     flexGrow: 1,
@@ -57,7 +59,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '60%',
+    width: '100%',
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '80%',
   },
 });
 
@@ -105,6 +113,9 @@ const GameScreen: FC<Props> = ({ userChoice, onGameOver }) => {
     initialGuess.toString(),
   ]);
   const [currentGuess, setCurrentGuess] = useState<number>(initialGuess);
+  const [availableDeviceHeight, setAvailableDeviceHeight] = useState<number>(
+    Dimensions.get('window').height
+  );
 
   const nextGuessHandler = (direction: 'lower' | 'greater') => {
     if (
@@ -140,6 +151,51 @@ const GameScreen: FC<Props> = ({ userChoice, onGameOver }) => {
     }
   }, [currentGuess, userChoice, pastGuesses, onGameOver]);
 
+  useEffect(() => {
+    const updateLayout = () => {
+      setAvailableDeviceHeight(Dimensions.get('window').height);
+    };
+    Dimensions.addEventListener('change', updateLayout);
+
+    return () => {
+      Dimensions.removeEventListener('change', updateLayout);
+    };
+  }, []);
+
+  if (availableDeviceHeight < 500) {
+    return (
+      <View style={styles.screen}>
+        <TextWithFamily fontFamily="open-sans-bold">
+          Opponent&apos;s Guess
+        </TextWithFamily>
+        <View style={styles.controls}>
+          <TouchableOpacity
+            style={{ ...styles.button, ...styles.successButton }}
+            onPress={() => nextGuessHandler('lower')}
+          >
+            <Ionicons name="md-remove" size={24} style={styles.successButton} />
+          </TouchableOpacity>
+          <NumberContainer>{currentGuess}</NumberContainer>
+          <TouchableOpacity
+            style={{ ...styles.button, ...styles.successButton }}
+            onPress={() => nextGuessHandler('greater')}
+          >
+            <Ionicons name="md-add" size={24} style={styles.successButton} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.listContainer}>
+          <FlatList
+            keyExtractor={item => item}
+            data={pastGuesses}
+            // eslint-disable-next-line react/jsx-no-bind
+            renderItem={item => renderListItem(pastGuesses.length, item)}
+            contentContainerStyle={styles.list}
+          />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <TextWithFamily fontFamily="open-sans-bold">
@@ -161,11 +217,6 @@ const GameScreen: FC<Props> = ({ userChoice, onGameOver }) => {
         </TouchableOpacity>
       </Card>
       <View style={styles.listContainer}>
-        {/* <ScrollView contentContainerStyle={styles.list}>
-          {pastGuesses.map((guess, index) =>
-            renderListItem(guess, pastGuesses.length - index)
-          )}
-        </ScrollView> */}
         <FlatList
           keyExtractor={item => item}
           data={pastGuesses}
